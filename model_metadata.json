@@ -1,0 +1,23 @@
+{
+  "feature_names": [
+    "gender",
+    "age",
+    "race:AfricanAmerican",
+    "race:Asian",
+    "race:Caucasian",
+    "race:Hispanic",
+    "race:Other",
+    "hypertension",
+    "heart_disease",
+    "smoking_history",
+    "bmi",
+    "hbA1c_level",
+    "blood_glucose_level"
+  ],
+  "training_medians": {
+    "bmi": 27.32,
+    "hbA1c_level": 5.8,
+    "blood_glucose_level": 140.0
+  },
+  "timestamp": "2025-11-25T09:01:28.718121"
+}
