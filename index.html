@@ -1,0 +1,74 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2>Diabetes Risk Assessment</h2>
+        <p>Complete this simple form to understand your diabetes risk and get personalized health advice.</p>
+    </div>
+    
+    {% if error %}
+    <div class="error-message">
+        <strong>Error:</strong> {{ error }}
+    </div>
+    {% endif %}
+    
+    <form method="POST" action="/predict" class="health-form">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="age">Age</label>
+                <input type="number" id="age" name="age" min="0" max="120" required>
+                <small>Your current age</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="gender">Gender</label>
+                <select id="gender" name="gender" required>
+                    <option value="">Select Gender</option>
+                    <option value="Female">Female</option>
+                    <option value="Male">Male</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="bmi">BMI (Body Mass Index)</label>
+                <input type="number" id="bmi" name="bmi" step="0.1" min="10" max="60" required>
+                <small>Healthy range: 18.5 - 24.9</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="smoking_history">Smoking History</label>
+                <select id="smoking_history" name="smoking_history" required>
+                    <option value="">Select Option</option>
+                    <option value="never">Never smoked</option>
+                    <option value="former">Used to smoke</option>
+                    <option value="current">Currently smoke</option>
+                    <option value="not current">Occasionally smoke</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="hba1c">HbA1c Level</label>
+                <input type="number" id="hba1c" name="hba1c" step="0.1" min="3" max="15" required>
+                <small>Normal: &lt;5.7% | Diabetes: ≥6.5%</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="glucose">Blood Glucose Level</label>
+                <input type="number" id="glucose" name="glucose" min="50" max="300" required>
+                <small>Normal fasting: &lt;100 mg/dL</small>
+            </div>
+        </div>
+        
+        <button type="submit" class="btn-primary">
+            🔍 Assess My Risk
+        </button>
+    </form>
+    
+    <div class="info-section">
+        <h3>💡 About This Assessment</h3>
+        <p>This tool uses machine learning to analyze your health metrics and provide personalized insights about your diabetes risk. All information is processed securely and anonymously.</p>
+    </div>
+</div>
+{% endblock %}
