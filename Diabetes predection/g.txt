@@ -1,0 +1,133 @@
+from fastapi import FastAPI, Form
+from fastapi.responses import HTMLResponse
+from diabetes import DiabetesPredictor  # your existing class
+
+app = FastAPI()
+predictor = DiabetesPredictor()
+if predictor.load_model():
+    print("✅ Model loaded and ready.")
+
+
+@app.get("/", response_class=HTMLResponse)
+def index():
+    return """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Diabetes Predictor</title>
+        <style>
+            body { background: #f2f7ff; font-family: Arial; display:flex; justify-content:center; padding-top:40px; }
+            .container { width:450px; background:white; padding:25px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15); }
+            h2 { text-align:center; color:#2867b2; margin-bottom:10px; }
+            p.description { text-align:center; font-size:14px; color:#555; margin-bottom:25px; }
+            label { display:block; margin-top:12px; font-weight:bold; color:#333; }
+            input, select { width:100%; padding:10px; margin-top:5px; font-size:15px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box; }
+            .help-text { font-size:12px; color:#666; margin-top:4px; }
+            button { margin-top:20px; width:100%; padding:12px; background:#2867b2; border:none; color:white; font-size:16px; border-radius:6px; cursor:pointer; transition:0.3s; }
+            button:hover { background:#1d4f88; }
+            footer { text-align:center; margin-top:18px; color:#777; font-size:13px; }
+            .unit-select { margin-top:5px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h2>🩺 Diabetes Predictor</h2>
+            <p class="description">Enter your health information to estimate diabetes risk.</p>
+            <form action="/predict_form" method="post">
+
+                <label>Gender</label>
+                <select name="gender">
+                    <option>Female</option>
+                    <option>Male</option>
+                    <option>Other</option>
+                </select>
+                <div class="help-text">Select your biological sex assigned at birth.</div>
+
+                <label>Age</label>
+                <input type="number" name="age" step="0.1" required>
+                <div class="help-text">Enter your age in years (1–120).</div>
+
+                <label>BMI</label>
+                <input type="number" name="bmi" step="0.1" required>
+                <div class="help-text">BMI = weight(kg) ÷ height(m²). Normal: 18.5–24.9, enter 10–60.</div>
+
+                <label>Smoking History</label>
+                <select name="smoking_history">
+                    <option>never</option>
+                    <option>not current</option>
+                    <option>current</option>
+                    <option>No Info</option>
+                    <option>ever</option>
+                    <option>former</option>
+                </select>
+                <div class="help-text">Choose the option that best describes your smoking habits.</div>
+
+                <label>Blood Glucose Level</label>
+                <input type="number" name="blood_glucose_level" step="0.01" required>
+                <div class="help-text">
+                    Enter your fasting blood sugar.
+                </div>
+
+                <label>Unit</label>
+                <select name="glucose_unit" class="unit-select">
+                    <option value="g/L">g/L (Algeria)</option>
+                    <option value="mg/dL">mg/dL (International)</option>
+                </select>
+                <div class="help-text">
+                    Choose the unit of your blood glucose measurement. g/L will be converted automatically to mg/dL.
+                </div>
+
+                <label>HbA1c Level (%)</label>
+                <input type="number" name="hbA1c_level" step="0.1" required>
+                <div class="help-text">
+                    Average blood sugar over 3 months (lab test). Normal: 4–5.6%, prediabetes: 5.7–6.4%, diabetes: ≥6.5%.
+                </div>
+
+                <button type="submit">Predict Diabetes Risk</button>
+            </form>
+            <footer>Diabetes Predictor v1.1 - Algeria friendly 🇩🇿</footer>
+        </div>
+    </body>
+    </html>
+    """
+
+
+def convert_glucose(value: float, unit: str) -> float:
+    """Convert blood glucose to mg/dL for the model."""
+    return value * 100 if unit == "g/L" else value
+
+
+@app.post("/predict_form", response_class=HTMLResponse)
+def predict_form(
+    gender: str = Form(...),
+    age: float = Form(...),
+    bmi: float = Form(...),
+    smoking_history: str = Form(...),
+    hbA1c_level: float = Form(...),
+    blood_glucose_level: float = Form(...),
+    glucose_unit: str = Form(...)
+):
+    blood_glucose_mgdl = convert_glucose(blood_glucose_level, glucose_unit)
+
+    user_input = {
+        "gender": gender,
+        "age": age,
+        "bmi": bmi,
+        "smoking_history": smoking_history,
+        "hbA1c_level": hbA1c_level,
+        "blood_glucose_level": blood_glucose_mgdl
+    }
+
+    result = predictor.predict_diabetes(user_input)
+
+    # Keep result page simple, like before
+    return f"""
+    <html>
+    <body style='font-family:Arial;'>
+        <h2>Prediction Result</h2>
+        <p>{result}</p>
+        <a href="/">🔙 Go back</a>
+    </body>
+    </html>
+    """
