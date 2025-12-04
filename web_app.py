@@ -26,14 +26,14 @@ if not predictor.load_model():
 print("✅ Model loaded and ready.")
 
 
+
 # =========================================================
 # HTML FORM UI
 # =========================================================
-@app.get("/", response_class=HTMLResponse)
-@app.get("/", response_class=HTMLResponse)
-@app.get("/", response_class=HTMLResponse)
-def index():
+@app.get("/predict", response_class=HTMLResponse)
+def predict_page():
     return """
+
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -121,7 +121,7 @@ def index():
 
     <body>
         <div class="container">
-            <h2>🩺 Diabetes Predictor</h2>
+            <h2>🩺 Diabete Predictor</h2>
             <p class="description">Enter your health information to estimate diabetes risk.</p>
 
             <form action="/predict_form" method="post">
@@ -202,14 +202,149 @@ def index():
 
 
 
+@app.get("/", response_class=HTMLResponse)
+def home_page():
+
+    return """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Diabetes Health Guide</title>
+
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                font-family: Arial, sans-serif;
+                background: #f7fbff;
+            }
+
+            .header {
+                background: #2867b2;
+                padding: 25px;
+                text-align: center;
+                color: white;
+            }
+
+            .header h1 {
+                margin: 0;
+                font-size: 32px;
+            }
+
+            .content {
+                width: 80%;
+                max-width: 900px;
+                margin: 25px auto;
+                background: white;
+                padding: 25px;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            }
+
+            h2 {
+                color: #2867b2;
+                margin-top: 25px;
+            }
+
+            p {
+                color: #333;
+                line-height: 1.6;
+                font-size: 15px;
+            }
+
+            ul {
+                margin: 10px 0;
+                padding-left: 20px;
+            }
+
+            li {
+                margin-bottom: 6px;
+            }
+
+            .predict-btn {
+                display: block;
+                margin: 35px auto;
+                width: 260px;
+                text-align: center;
+                background: #2867b2;
+                color: white;
+                padding: 14px;
+                font-size: 18px;
+                border-radius: 8px;
+                text-decoration: none;
+                transition: 0.3s;
+            }
+
+            .predict-btn:hover {
+                background: #1d4f88;
+            }
+
+            .footer {
+                text-align: center;
+                padding: 20px;
+                margin-top: 40px;
+                color: #777;
+                font-size: 14px;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="header">
+            <h1>Diabetes Health Awareness</h1>
+        </div>
+
+        <div class="content">
+
+            <h2>🩺 What is Diabetes?</h2>
+            <p>
+                Diabetes is a chronic condition where the body struggles to regulate blood sugar (glucose).
+                Early detection is extremely important because untreated diabetes can damage the heart, kidneys,
+                eyes, and nerves. With proper diet, exercise, and medical care, diabetes can be effectively managed.
+            </p>
+
+            <h2>⚠ Symptoms You Should Watch For</h2>
+            <ul>
+                <li>Increased thirst & frequent urination</li>
+                <li>Constant fatigue</li>
+                <li>Blurred vision</li>
+                <li>Slow-healing wounds</li>
+                <li>Unexplained weight loss</li>
+            </ul>
+
+            <h2>🥗 How to Reduce Your Risk</h2>
+            <ul>
+                <li>Maintain a healthy weight and BMI</li>
+                <li>Avoid sugary drinks and processed foods</li>
+                <li>Exercise at least 30 minutes per day</li>
+                <li>Stop smoking and reduce alcohol intake</li>
+                <li>Check your blood glucose levels regularly</li>
+            </ul>
+
+            <h2>🧪 Why Use Our Diabetes Predictor?</h2>
+            <p>
+                Our AI-based system analyzes your health factors and estimates your diabetes risk instantly.
+                It is not a medical diagnosis, but a reliable health indicator to help you take the right steps early.
+            </p>
+
+            <a href="/predict" class="predict-btn">🧮 Go to Diabetes Predictor</a>
+
+        </div>
+
+        <div class="footer">
+            Diabetes Predictor • Health Awareness Project
+        </div>
+
+    </body>
+    </html>
+    """
+
 
 # =========================================================
 # POST: API endpoint for form submission
 # =========================================================
 @app.post("/predict_form", response_class=HTMLResponse)
-@app.post("/predict_form", response_class=HTMLResponse)
-
-
 
 def predict_form(
     gender: str = Form(...),
@@ -346,7 +481,8 @@ def predict_form(
         html_result += "</ul>"
 
     html_result += """
-            <a href="/">⬅ Back to Prediction Form</a>
+            <a href="/predict">⬅ Back to Prediction Form</a>
+
         </div>
     </body>
     </html>
