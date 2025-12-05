@@ -1,11 +1,21 @@
+# FastAPI : web framework to build API's
+# Form : allows reading values submitted from html <form>
 from fastapi import FastAPI, Form
+
+# raw html pages
+#JSON results
 from fastapi.responses import HTMLResponse, JSONResponse
+
+# allows javascript from other domains to use API for web apps
 from fastapi.middleware.cors import CORSMiddleware
+
+# imports the created ML class
 from diabetes import DiabetesPredictor  # <-- your existing class
 
+# initialize server and sets name and version of documantation
 app = FastAPI(title="Diabetes Prediction API", version="1.0")
 
-# Allow frontend / JS clients
+# Allow frontend / JS clients to talk to API
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -17,9 +27,15 @@ app.add_middleware(
 # =========================================================
 # Load Model on Startup
 # =========================================================
+
+# creates ML model object
 predictor = DiabetesPredictor()
+
+# if no saved model train a new one
 if not predictor.load_model():
     print("⚠ No saved model found — training a new one...")
+   
+   #automatically trains and saves model
     df = predictor.load_and_preprocess_data()
     predictor.train_model(df)
     predictor.save_model()
@@ -344,9 +360,13 @@ def home_page():
 # =========================================================
 # POST: API endpoint for form submission
 # =========================================================
+
+# recieve the data submitted from /predict
 @app.post("/predict_form", response_class=HTMLResponse)
 
 def predict_form(
+    
+    # form() means these values from HTML fields
     gender: str = Form(...),
     age: float = Form(...),
     bmi: float = Form(...),
@@ -363,6 +383,7 @@ def predict_form(
 
     blood_glucose_mgdl = convert_glucose(blood_glucose_level, glucose_unit)
 
+    # input dictionary
     user_input = {
         "gender": gender,
         "age": age,
@@ -372,6 +393,7 @@ def predict_form(
         "blood_glucose_level": blood_glucose_mgdl
     }
 
+    # return results
     result = predictor.predict_diabetes(user_input)
 
     # Colors by risk category
@@ -494,6 +516,9 @@ def predict_form(
 # =========================================================
 # JSON API Endpoint (for external apps)
 # =========================================================
+
+# for mobile app
+# API testing
 @app.post("/predict_json")
 def predict_json(data: dict):
     result = predictor.predict_diabetes(data)

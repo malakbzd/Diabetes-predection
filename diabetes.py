@@ -1,19 +1,43 @@
+# pandas handle datasets,tables,csv files
 import pandas as pd
+
+# numpy handles numeric operations
 import numpy as np
+
+# train_test_split : splits data into training and testing
+# gridsearchcv : tries multiple hyperparameters to find the best model settings
 from sklearn.model_selection import train_test_split, GridSearchCV
+
+# normalizes numeric values for ML
 from sklearn.preprocessing import StandardScaler
+
+# ML algorithm
 from sklearn.ensemble import RandomForestClassifier
+
+# tools to evaluate model performance
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report, roc_auc_score
+
+# pickle : save and load trained models
 import pickle
+
+# json : save metadata
 import json
+
+# file checking if model exist or not
 import os
+
+# save timestamps
 from datetime import datetime
+
+# track important events or errors
 import logging
 
 
 # ---------------------------------------------------------
 # Logging Setup
 # ---------------------------------------------------------
+
+# sets up logging so it prints eroors messages
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -22,6 +46,8 @@ class DiabetesPredictor:
     # =========================================================
     # Initialization
     # =========================================================
+    
+    # initial state for model and processing tools 
     def __init__(self):
         self.model = None
         self.scaler = None
@@ -29,14 +55,16 @@ class DiabetesPredictor:
         self.training_medians = None
         self.is_trained = False
 
-        # Allowed categorical values
-        self.valid_genders = ["female", "male", "other"]
+        # allowed gender values
+        self.valid_genders = ["female", "male"]
+        
+        # smoking values
         self.valid_smoking_values = [
             "never", "not current", "current", "no info", "ever", "former"
         ]
 
-        # Mappings
-        self.gender_mapping = {'female': 0, 'male': 1, 'other': 2}
+        # Mappings , convering string to numbers for ML
+        self.gender_mapping = {'female': 0, 'male': 1}
         self.smoking_mapping = {
             'never': 0, 'not current': 1, 'current': 2,
             'no info': 3, 'ever': 4, 'former': 5
@@ -45,19 +73,23 @@ class DiabetesPredictor:
         self.zero_invalid_cols = ['bmi', 'hbA1c_level', 'blood_glucose_level']
 
     # =========================================================
-    # 1️⃣ Dataset Loading & Cleaning
+    # 1️\ Dataset Loading & Cleaning
     # =========================================================
     def load_and_preprocess_data(self, file_path="diabetes_dataset_with_notes.csv"):
         try:
             if not os.path.exists(file_path):
                 raise FileNotFoundError(f"Dataset file not found: {file_path}")
 
+            # read csv data
             df = pd.read_csv(file_path)
             logger.info(f"Dataset loaded with {len(df)} rows.")
 
+            # remove colomns not needed for prediction
             drop_cols = ["year", "location", "clinical_notes"]
             df = df.drop([c for c in drop_cols if c in df.columns], axis=1)
 
+            #run cleaning function
+            #_clean_data() : replaces zero with median and convert categories to numbers
             df = self._clean_data(df)
 
             if "diabetes" not in df.columns:
@@ -85,7 +117,7 @@ class DiabetesPredictor:
                 df[col] = df[col].fillna(median_val)
                 self.training_medians[col] = float(median_val)
 
-        # Normalize category strings
+        # convert gender to numbers
         df["gender"] = (
             df["gender"].astype(str)
             .str.strip().str.lower()
@@ -93,6 +125,7 @@ class DiabetesPredictor:
             .fillna(self.gender_mapping["other"])
         )
 
+        # convert smoking history to numbers
         df["smoking_history"] = (
             df["smoking_history"].astype(str)
             .str.strip().str.lower()
@@ -103,23 +136,27 @@ class DiabetesPredictor:
         return df
 
     # =========================================================
-    # 2️⃣ Train Model
+    # 2️\ Train Model
     # =========================================================
     def train_model(self, df, test_size=0.2, random_state=42):
         try:
+            # split into featured x and target y
             X = df.drop("diabetes", axis=1)
             y = df["diabetes"]
             self.feature_names = list(X.columns)
 
+            # train-test split
             X_train, X_test, y_train, y_test = train_test_split(
                 X, y, test_size=test_size, random_state=random_state, stratify=y
             )
 
-            # Scale numerical features
+            # Scale numerical features , normalizes numbers
             self.scaler = StandardScaler()
             X_train_scaled = self.scaler.fit_transform(X_train)
             X_test_scaled = self.scaler.transform(X_test)
 
+            # grid search csv
+            # tries various random forest settings           
             param_grid = {
                 "n_estimators": [100, 200],
                 "max_depth": [10, 20, None]
@@ -132,11 +169,13 @@ class DiabetesPredictor:
                 scoring="accuracy",
                 n_jobs=-1
             )
+            
+            # finds best model
             grid.fit(X_train_scaled, y_train)
-
             self.model = grid.best_estimator_
             self.is_trained = True
 
+            # evaluate
             self._evaluate_model(X_test_scaled, y_test)
 
         except Exception as e:
@@ -157,15 +196,17 @@ class DiabetesPredictor:
         print("\nClassification Report:\n", classification_report(y_test, y_pred))
 
     # =========================================================
-    # 3️⃣ Save Model + Metadata
+    # 3️\ Save Model + Metadata
     # =========================================================
     def save_model(self):
         if not self.is_trained:
             raise ValueError("Model must be trained before saving.")
 
+        # saving the model
         pickle.dump(self.model, open("diabetes_model.pkl", "wb"))
         pickle.dump(self.scaler, open("scaler.pkl", "wb"))
 
+        # save metadata
         metadata = {
             "feature_names": self.feature_names,
             "training_medians": self.training_medians,
@@ -176,13 +217,15 @@ class DiabetesPredictor:
         logger.info("Model, scaler, and metadata saved successfully.")
 
     # =========================================================
-    # 4️⃣ Load Model
+    # 4️\ Load Model
     # =========================================================
     def load_model(self):
         try:
+            # check if model exists
             if not os.path.exists("diabetes_model.pkl"):
                 return False
 
+            # load model , scalar and metadata
             self.model = pickle.load(open("diabetes_model.pkl", "rb"))
             self.scaler = pickle.load(open("scaler.pkl", "rb"))
 
@@ -207,9 +250,11 @@ class DiabetesPredictor:
             return False
 
     # =========================================================
-    # 5️⃣ **Robust Prediction with Full Validation**
+    # 5️\ Robust Prediction with Full Validation
     # =========================================================
     def predict_diabetes(self, user_input: dict) -> dict:
+        
+        # check if model trained
         if not self.is_trained:
             return {"error": "Model not trained or loaded."}
 
@@ -261,6 +306,7 @@ class DiabetesPredictor:
             }])
 
             # Order columns
+            # create dataframe with correct order
             df = df.reindex(columns=self.feature_names)
 
         except Exception as e:
@@ -301,7 +347,7 @@ def main():
 
     try:
         user_input = {
-            "gender": input("Gender (Female/Male/Other): ").strip(),
+            "gender": input("Gender (Female/Male): ").strip(),
             "age": input("Age (0-120): ").strip(),
             "bmi": input("BMI (10-60): ").strip(),
             "smoking_history": input(
