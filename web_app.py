@@ -103,7 +103,7 @@ home_html = """<!DOCTYPE html>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+background: linear-gradient(#a6d1ff 50%, #4da6ff 100%);
             min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
@@ -196,9 +196,6 @@ home_html = """<!DOCTYPE html>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/articles"><i class="fas fa-book me-1"></i> Diabetes Articles</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#contact"><i class="fas fa-envelope me-1"></i> Contact</a>
                     </li>
                 </ul>
             </div>
@@ -388,7 +385,7 @@ calculator_html = """<!DOCTYPE html>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(#a6d1ff 50%, #4da6ff 100%);
             min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
@@ -600,7 +597,6 @@ calculator_html = """<!DOCTYPE html>
                                            min="50" max="300" step="1" required placeholder="e.g., 100">
                                     <select class="form-select" style="max-width: 150px;" name="glucose_unit">
                                         <option value="mgdl">mg/dL</option>
-                                        <option value="mmol">mmol/L</option>
                                     </select>
                                 </div>
                                 <div class="form-text">
@@ -802,7 +798,7 @@ articles_html = """<!DOCTYPE html>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(#a6d1ff 50%, #4da6ff 100%);
             min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
@@ -2011,18 +2007,19 @@ async def predict_form(
                     </p>
                 </div>
                 
-                <!-- Action Buttons -->
-                <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
-                    <a href="/calculator" class="btn btn-primary btn-lg me-2">
-                        <i class="fas fa-redo me-2"></i>New Assessment
-                    </a>
-                    <button class="btn btn-outline-primary btn-lg" onclick="window.print()">
-                        <i class="fas fa-print me-2"></i>Print Results
-                    </button>
-                    <a href="/articles" class="btn btn-outline-success btn-lg ms-2">
-                        <i class="fas fa-book me-2"></i>Learn More
-                    </a>
-                </div>
+               <!-- Action Buttons -->
+<div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
+    <a href="/calculator" class="btn btn-primary btn-lg me-2">
+        <i class="fas fa-redo me-2"></i>New Assessment
+    </a>
+    <button class="btn btn-primary btn-lg me-2" onclick="window.print()">
+        <i class="fas fa-print me-2"></i>Print Results
+    </button>
+    <a href="/articles" class="btn btn-success btn-lg ms-2">
+        <i class="fas fa-book me-2"></i>Learn More
+    </a>
+</div>
+
             </div>
         </div>
     </div>
