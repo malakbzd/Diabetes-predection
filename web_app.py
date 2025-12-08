@@ -2095,9 +2095,6 @@ def health_check():
 
 # Run the application
 if __name__ == "__main__":
-    print("🚀 Starting Diabetes Risk Assessment Web App...")
-    print("📊 Open your browser and go to: http://localhost:8000")
-    print("🏠 Home Page: http://localhost:8000")
-    print("🧮 Calculator: http://localhost:8000/calculator")
-    print("📚 Articles: http://localhost:8000/articles")
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    import os
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
