@@ -1,2 +1,5 @@
 fastapi
 uvicorn
+pandas  # if you use it
+scikit-learn  # if your model uses it
+numpy
