@@ -1,0 +1,5 @@
+import panda as pd = library used to work with tables and datasets load the diabetes data set csv file
+- clean missing data
+- select colomns 
+- convert user input into a dataframe for predection
+

@@ -1,15 +1,17 @@
-import pandas as pd
-import numpy as np
-import pickle
-import os
-import json
-from pathlib import Path
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.ensemble import RandomForestClassifier
+import pandas as pd   # for loading and manipulating csv data
+import numpy as np    # for numerical operations
+import pickle         # for saving and loading the trained model
+import os             # for checking if file exist exist
+import json           # for future json processing
+from pathlib import Path     # for working with file paths
+from sklearn.model_selection import train_test_split     # splitting data
+from sklearn.preprocessing import StandardScaler, LabelEncoder    # scaling and categorical encoding
+from sklearn.ensemble import RandomForestClassifier               # machine learning model
 from sklearn.metrics import accuracy_score, classification_report
 import warnings
-warnings.filterwarnings('ignore')
+warnings.filterwarnings('ignore')  # hide non emportant warning
+
+#---------CONSTRUCT DATA----------#
 
 class DiabetesPredictor:
     def __init__(self, model_path="diabetes_model.pkl"):
@@ -17,13 +19,13 @@ class DiabetesPredictor:
         Initialize Diabetes Predictor
         """
         self.model_path = model_path
-        self.model = None
-        self.scaler = None
-        self.encoder = {}
-        self.feature_names = None
-        self.class_names = ['No Diabetes', 'Diabetes']
+        self.model = None   # to hold the random trained model forest
+        self.scaler = None  # holds standardscalar to normallize numeric inputs
+        self.encoder = {}   # a dictionarry to store labelencoder objects like gender and sloking history
+        self.feature_names = None  # list of colomns names(age , bmi..)
+        self.class_names = ['No Diabetes', 'Diabetes'] # 0 and 1
         
-        # Define acceptable ranges for validation
+        # Define acceptable ranges for validation to reject unrealistic inputs
         self.validation_ranges = {
             'age': (0, 120),
             'bmi': (10, 60),
@@ -31,7 +33,7 @@ class DiabetesPredictor:
             'blood_glucose_level': (50, 300)
         }
         
-        # Medical insights
+        # Medical informations
         self.medical_info = {
             'bmi': {
                 'name': 'Body Mass Index',
@@ -52,104 +54,107 @@ class DiabetesPredictor:
             }
         }
 
+#----------------LOAD DATA--------------#
+
     def load_and_preprocess_data(self, filepath="diabetes_dataset.csv"):
-        """
-        Load and preprocess the diabetes dataset
-        """
+       
         try:
-            if not os.path.exists(filepath):
+            if not os.path.exists(filepath):   # if the file dosnt exist
                 raise FileNotFoundError(f"Dataset '{filepath}' not found.")
             
-            print(f"📁 Loading dataset from {filepath}")
-            df = pd.read_csv(filepath)
+            print(f"Loading dataset from {filepath}")
+            df = pd.read_csv(filepath)     # load csv data into panda dataframe 
             
-            print(f"✅ Dataset loaded: {df.shape[0]} rows, {df.shape[1]} columns")
+            print(f"Dataset loaded: {df.shape[0]} rows, {df.shape[1]} columns")
             
             # Check for diabetes column
-            if 'diabetes' not in df.columns:
+            if 'diabetes' not in df.columns:     # check if dataset contains variable diabetes
                 raise ValueError("Dataset must contain 'diabetes' column")
             
             # Select only the columns we need
-            # Your dataset has: gender, age, smoking_history, bmi, hbA1c_level, blood_glucose_level
+            # dataset has: gender, age, smoking_history, bmi, hbA1c_level, blood_glucose_level
             required_cols = ['gender', 'age', 'smoking_history', 'bmi', 'hbA1c_level', 'blood_glucose_level', 'diabetes']
             
-            # Check which columns exist in the dataset
+            # Check each column if it exist in the dataset
             available_cols = []
             for col in required_cols:
                 if col in df.columns:
-                    available_cols.append(col)
+                    available_cols.append(col)  # put in
                 else:
-                    print(f"⚠ Warning: Column '{col}' not found in dataset")
+                    print(f" !!! Warning: Column '{col}' not found in dataset")
             
-            print(f"🔍 Using columns: {available_cols}")
-            df_clean = df[available_cols].copy()
+            print(f" Using columns: {available_cols}")
+            df_clean = df[available_cols].copy() # create seperated copy
             
             # Handle missing values
-            print("\n🔍 Checking for missing values...")
-            missing_values = df_clean.isnull().sum()
-            if missing_values.any():
-                print(f"⚠ Missing values found:\n{missing_values[missing_values > 0]}")
+            print("\n Checking for missing values...")
+            missing_values = df_clean.isnull().sum()  # return dataframe with nbr of missing values
+            if missing_values.any(): # return true if any colomns have missing values
+                print(f"!!! Missing values found:\n{missing_values[missing_values > 0]}")
+               
                 # Fill numeric columns with median
                 for col in ['age', 'bmi', 'hbA1c_level', 'blood_glucose_level']:
                     if col in df_clean.columns and df_clean[col].isnull().any():
-                        median_val = df_clean[col].median()
-                        df_clean[col].fillna(median_val, inplace=True)
+                        median_val = df_clean[col].median()    # replace lissing values with median
+                        df_clean[col].fillna(median_val, inplace=True)  
             else:
-                print("✅ No missing values found")
+                print(" No missing values found")
             
             # Encode categorical variables
-            print("\n🔧 Encoding categorical variables...")
+            print("\n Encoding categorical variables...")
             for col in ['gender', 'smoking_history']:
                 if col in df_clean.columns:
-                    le = LabelEncoder()
-                    df_clean[col] = le.fit_transform(df_clean[col].astype(str))
-                    self.encoder[col] = le
-                    print(f"   → Encoded {col}: {list(le.classes_)}")
+                    le = LabelEncoder()     # convert categorical letters values into numbers
+                     # astype ensure all data is string
+                     # fit_transform() assign unique integer to each category
+                    df_clean[col] = le.fit_transform(df_clean[col].astype(str)) 
+                    self.encoder[col] = le # store the encoder
+                    print(f" Encoded {col}: {list(le.classes_)}")
             
             # Validate data ranges
-            print("\n⚕️ Validating medical ranges...")
-            for col, (min_val, max_val) in self.validation_ranges.items():
+            print("\n Validating medical ranges...")
+            for col, (min_val, max_val) in self.validation_ranges.items():  # checks for values outside realiqtic range
                 if col in df_clean.columns:
                     outliers = df_clean[(df_clean[col] < min_val) | (df_clean[col] > max_val)]
                     if len(outliers) > 0:
-                        print(f"   ⚠ {col}: {len(outliers)} values outside range {min_val}-{max_val}")
+                        print(f"  !!! {col}: {len(outliers)} values outside range {min_val}-{max_val}")
             
-            # Define feature names
+            # Define feature names except diabetes
             self.feature_names = [col for col in df_clean.columns if col != 'diabetes']
             
             # Diabetes distribution
-            diabetes_counts = df_clean['diabetes'].value_counts()
-            print(f"\n📊 Diabetes Distribution:")
-            print(f"   → Non-diabetic: {diabetes_counts.get(0, 0)} ({diabetes_counts.get(0, 0)/len(df_clean)*100:.1f}%)")
-            print(f"   → Diabetic: {diabetes_counts.get(1, 0)} ({diabetes_counts.get(1, 0)/len(df_clean)*100:.1f}%)")
+            diabetes_counts = df_clean['diabetes'].value_counts()  # shows how many patients are diabetic or not 
+            print(f"\n Diabetes Distribution:")
+            # percentage of diabetic and non diabetic
+            print(f"    Non-diabetic: {diabetes_counts.get(0, 0)} ({diabetes_counts.get(0, 0)/len(df_clean)*100:.1f}%)")
+            print(f"    Diabetic: {diabetes_counts.get(1, 0)} ({diabetes_counts.get(1, 0)/len(df_clean)*100:.1f}%)")
             
-            print("\n✅ Data preprocessing completed successfully")
+            print("\n Data preprocessing completed successfully")
             return df_clean
             
         except Exception as e:
-            print(f"❌ Error loading data: {str(e)}")
-            raise
+            print(f" Error loading data: {str(e)}") # str e convert exception to a readable message
+            raise    # stops program and raise the specified exception
 
     def train_model(self, df):
-        """
-        Train Random Forest Classifier
-        """
-        print("\n🤖 Training Diabetes Prediction Model...")
+        # df is the pandas dataframe it has been cleaned and processed
+        print("\n Training Diabetes Prediction Model...")
         
         # Prepare features and target
-        X = df.drop('diabetes', axis=1)
-        y = df['diabetes']
+        X = df.drop('diabetes', axis=1) # all input features
+        y = df['diabetes']  # target variables 0/1
         
         # Store feature names
         self.feature_names = X.columns.tolist()
         
-        print(f"   → Features used: {self.feature_names}")
-        print(f"   → Total samples: {len(df)}")
+        print(f"   Features used: {self.feature_names}") # print input data except diabetes
+        print(f"   Total samples: {len(df)}") # return nbr of rows of the cleaned data
         
         # Split data
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42, stratify=y
+        X_train, X_test, y_train, y_test = train_test_split( 
+            X, y, test_size=0.2, random_state=42, stratify=y 
         )
+        
         
         print(f"   → Training samples: {X_train.shape[0]}")
         print(f"   → Testing samples: {X_test.shape[0]}")
